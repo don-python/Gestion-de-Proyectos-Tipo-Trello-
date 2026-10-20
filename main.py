@@ -1,5 +1,5 @@
 
-from models import database
+from orm.models import database
 from prettytable import PrettyTable
 
 
