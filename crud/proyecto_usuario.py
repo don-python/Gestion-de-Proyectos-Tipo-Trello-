@@ -1,7 +1,7 @@
 
 from peewee import IntegrityError
 from orm.models import ProyectoUsuario
-
+from prettytable import PrettyTable
 
 def listar_participantes():
     try:
@@ -67,3 +67,54 @@ def eliminar_participante(proyecto_id, usuario_id):
     except Exception as error:
         print(f"Error al eliminar participante: {error}")
         return False
+
+def menu_participantes():
+    while True:
+        tabla = PrettyTable()
+        tabla.field_names = ["Opción", "Operación"]
+        tabla.add_rows([
+            ["1", "Listar participantes"],
+            ["2", "Agregar participante"],
+            ["3", "Eliminar participante"],
+            ["0", "Volver"]
+        ])
+
+        print("\n=== GESTIÓN DE PARTICIPANTES ===")
+        print(tabla)
+
+        opcion = input("Selecciona una opción: ").strip()
+
+        if opcion == "1":
+            listar_participantes()
+
+        elif opcion == "2":
+            proyecto_id = input("ID del proyecto: ").strip()
+            usuario_id = input("ID del usuario: ").strip()
+
+            if proyecto_id.isdigit() and usuario_id.isdigit():
+                agregar_participante(
+                    int(proyecto_id),
+                    int(usuario_id)
+                )
+            else:
+                print("Debes ingresar ID numéricos válidos.")
+
+        elif opcion == "3":
+            proyecto_id = input("ID del proyecto: ").strip()
+            usuario_id = input("ID del usuario: ").strip()
+
+            if proyecto_id.isdigit() and usuario_id.isdigit():
+                eliminar_participante(
+                    int(proyecto_id),
+                    int(usuario_id)
+                )
+            else:
+                print("Debes ingresar ID numéricos válidos.")
+
+        elif opcion == "0":
+            break
+
+        else:
+            print("Opción no válida.")
+
+        input("\nPresiona Enter para continuar...")

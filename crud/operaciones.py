@@ -1,4 +1,4 @@
-from peewee import IntegrityError, DoesNotExist, ForeignKeyField
+from peewee import IntegrityError, DoesNotExist, ForeignKeyField, CompositeKey
 from prettytable import PrettyTable
 
 
@@ -64,7 +64,7 @@ def listar_registros(modelo):
 
 def buscar_registro(modelo, identificador):
     """Busca un registro por su ID individual."""
-    if modelo._meta.primary_key is not modelo._meta.fields.get("id"):
+    if isinstance(modelo._meta.primary_key, CompositeKey):
         print("Este modelo necesita una búsqueda por clave compuesta.")
         return None
 
@@ -91,7 +91,7 @@ def actualizar_registro(modelo, identificador, datos):
         print("No se proporcionaron datos para actualizar.")
         return False
 
-    if modelo._meta.primary_key is not modelo._meta.fields.get("id"):
+    if isinstance(modelo._meta.primary_key, CompositeKey):
         print("Este modelo necesita una actualización por clave compuesta.")
         return False
 
@@ -148,7 +148,7 @@ def actualizar_registro(modelo, identificador, datos):
 
 def eliminar_registro(modelo, identificador):
     """Elimina un registro por su ID individual."""
-    if modelo._meta.primary_key is not modelo._meta.fields.get("id"):
+    if isinstance(modelo._meta.primary_key, CompositeKey):
         print("Este modelo necesita una eliminación por clave compuesta.")
         return False
 

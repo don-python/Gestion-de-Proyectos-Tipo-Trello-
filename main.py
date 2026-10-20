@@ -1,6 +1,13 @@
-
-from orm.models import database
 from prettytable import PrettyTable
+from orm.models import (
+    database, Proyecto, Tablero, Lista,
+    Usuario, Tarjeta, Etiqueta, Comentario,
+)
+
+from crud.interfaz import menu_crud
+from crud.proyecto_usuario import menu_participantes
+from crud.tarjeta_etiqueta import menu_asociaciones
+
 
 
 def mostrar_menu():
@@ -8,41 +15,61 @@ def mostrar_menu():
     tabla.field_names = ["Opción", "Operación"]
 
     opciones = [
-        ("1", "Gestionar proyectos"),
-        ("2", "Gestionar tableros"),
-        ("3", "Gestionar listas"),
-        ("4", "Gestionar usuarios"),
-        ("5", "Gestionar tarjetas"),
-        ("6", "Gestionar etiquetas"),
-        ("7", "Gestionar comentarios"),
+        ("1", "Listar proyectos"),
+        ("2", "Listar tableros"),
+        ("3", "Listar listas"),
+        ("4", "Listar usuarios"),
+        ("5", "Listar tarjetas"),
+        ("6", "Listar etiquetas"),
+        ("7", "Listar comentarios"),
         ("8", "Gestionar participantes de proyectos"),
         ("9", "Gestionar etiquetas de tarjetas"),
-        ("0", "Salir")
+        ("0", "Salir"),
     ]
 
     for opcion, operacion in opciones:
         tabla.add_row([opcion, operacion])
 
-    print("\nGestión de proyectos")
+    print("\n=== GESTIÓN DE PROYECTOS ===")
     print(tabla)
 
 
 def main():
-    while True:
-        mostrar_menu()
-        opcion = input("Selecciona una opción: ").strip()
+    acciones = {
+        "1": lambda: menu_crud(Proyecto, "Proyectos"),
+        "2": lambda: menu_crud(Tablero, "Tableros"),
+        "3": lambda: menu_crud(Lista, "Listas"),
+        "4": lambda: menu_crud(Usuario, "Usuarios"),
+        "5": lambda: menu_crud(Tarjeta, "Tarjetas"),
+        "6": lambda: menu_crud(Etiqueta, "Etiquetas"),
+        "7": lambda: menu_crud(Comentario, "Comentarios"),
+        "8": menu_participantes,
+        "9": menu_asociaciones,
+    }
 
-        if opcion == "0":
-            print("Hasta pronto.")
-            break
-        elif opcion in [str(i) for i in range(1, 10)]:
-            print("Sección seleccionada:", opcion)
-            print("Esta sección se implementará en el siguiente paso.")
-            input("\nPresiona Enter para continuar...")
-        else:
-            print("Opción no válida.")
+    try:
+        while True:
+            mostrar_menu()
+            opcion = input("Selecciona una opción: ").strip()
 
-    database.close()
+            if opcion == "0":
+                print("Hasta pronto.")
+                break
+
+            accion = acciones.get(opcion)
+
+            if accion:
+                accion()
+                input("\nPresiona Enter para continuar...")
+            else:
+                print("Opción no válida.")
+
+    except (KeyboardInterrupt, EOFError):
+        print("\nPrograma finalizado.")
+
+    finally:
+        if not database.is_closed():
+            database.close()
 
 
 if __name__ == "__main__":
