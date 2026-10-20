@@ -1,5 +1,3 @@
-CREATE DATABASE  gestion_proyectos;
-
 CREATE TABLE Proyecto (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,

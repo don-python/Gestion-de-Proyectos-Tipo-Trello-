@@ -1,6 +1,18 @@
+import os
+from dotenv import load_dotenv
 from peewee import *
 
-database = MySQLDatabase('gestion_proyectos', **{'charset': 'utf8mb4', 'host': 'localhost', 'port': 3306, 'user': 'root', 'password': ''})
+load_dotenv()
+
+database = MySQLDatabase(
+    os.getenv("DB_NAME"),
+    charset="utf8mb4",
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT", "3306")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD")
+)
+
 
 class UnknownField(object):
     def __init__(self, *_, **__): pass
