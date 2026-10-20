@@ -145,7 +145,7 @@ El archivo `uml/trello.drawio` contiene el diagrama de clases del proyecto, util
 
 ##  Estado actual
 
-**🟡 En desarrollo — Etapa de diseño UML**
+**🟡 En desarrollo **
 
 ## 👨‍💻 Autores
 
