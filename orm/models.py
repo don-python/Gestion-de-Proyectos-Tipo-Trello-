@@ -47,6 +47,7 @@ class Lista(BaseModel):
 class Usuario(BaseModel):
     email = CharField(max_length=150)
     nombre = CharField(max_length=100)
+    password = CharField(max_length=255)
 
     class Meta:
         table_name = 'usuario'
@@ -73,7 +74,6 @@ class Comentario(BaseModel):
 class Etiqueta(BaseModel):
     color = CharField(max_length=50)
     nombre = CharField(max_length=100)
-
     class Meta:
         table_name = 'etiqueta'
 

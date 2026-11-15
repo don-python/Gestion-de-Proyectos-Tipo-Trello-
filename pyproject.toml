@@ -1,0 +1,22 @@
+[project]
+name = "gestion-trello"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "maximoleonardocarrillosreyes-design", email = "maximoleonardocarrillosreyes@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "peewee>=4.5.3",
+    "prettytable>=3.18.0",
+    "pymysql>=1.2.4",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+gestion-trello = "gestion_trello:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
