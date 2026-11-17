@@ -1,4 +1,5 @@
 import os
+import hashlib
 from dotenv import load_dotenv
 from peewee import *
 
@@ -43,14 +44,37 @@ class Lista(BaseModel):
 
     class Meta:
         table_name = 'lista'
-
+###########################################################################
+#integracion de funcion de hasheo
+def hash_password(password: str) -> str:
+    """Hasheo de la contraseña"""
+    salt = os.urandom(16)
+    pwd_hash = hashlib.pbkdf2_hmac(
+        'sha256', 
+        password.encode('utf-8'), 
+        salt, 
+        100000
+    )
+    return salt.hex() + '$' + pwd_hash.hex()
+    
 class Usuario(BaseModel):
     email = CharField(max_length=150)
     nombre = CharField(max_length=100)
+    password = CharField(max_length=255)
 
     class Meta:
         table_name = 'usuario'
+    
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribimos el método save de Peewee para asegurar 
+        que la contraseña siempre se guarde hasheada automáticamente.
+        """
 
+        if self.password and '$' not in self.password:
+            self.password = hash_password(self.password)
+        super().save(*args, **kwargs)
+######################################################################
 class Tarjeta(BaseModel):
     descripcion = CharField(max_length=500, null=True)
     estado = CharField(constraints=[SQL("DEFAULT 'PENDIENTE'")])
@@ -73,7 +97,6 @@ class Comentario(BaseModel):
 class Etiqueta(BaseModel):
     color = CharField(max_length=50)
     nombre = CharField(max_length=100)
-
     class Meta:
         table_name = 'etiqueta'
 
