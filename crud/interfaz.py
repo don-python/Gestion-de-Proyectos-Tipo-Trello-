@@ -1,7 +1,8 @@
 from datetime import date
-from peewee import ForeignKeyField, DateField, IntegerField
+from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError  
 from prettytable import PrettyTable
 
+from orm.models import Usuario, normalizar_rut, validar_rut  
 from crud.operaciones import (
     crear_registro,
     listar_registros,
@@ -9,6 +10,20 @@ from crud.operaciones import (
     actualizar_registro,
     eliminar_registro,
 )
+from crud.usuarios import crear_usuario, actualizar_usuario, buscar_usuario_por_rut  # CRUD usuario
+
+
+# helper para mostrar en tabla los campos de cualquier registro encontrado
+def _mostrar_detalle_registro(modelo, registro):
+    print("\n=== DATOS DEL REGISTRO ===")
+    tabla = PrettyTable()
+    tabla.field_names = ["Campo", "Valor"]
+    for campo_nombre in modelo._meta.fields.keys():
+        valor = getattr(registro, campo_nombre)
+        if hasattr(valor, "get_id"):
+            valor = valor.get_id()
+        tabla.add_row([campo_nombre, valor])
+    print(tabla)
 
 
 def pedir_datos(modelo, registro=None):
@@ -52,6 +67,23 @@ def pedir_datos(modelo, registro=None):
                 elif isinstance(campo, IntegerField):
                     datos[nombre] = int(valor)
 
+                # valida formato/DV y comprueba que el RUT no esté repetido al pedir datos de Usuario
+                elif modelo is Usuario and nombre == "rut":
+                    if not validar_rut(valor):
+                        print("RUT inválido. Verifica el número y el dígito verificador (ej. 12.345.678-9).")
+                        continue
+
+                    rut_norm = normalizar_rut(valor)
+                    consulta = Usuario.select().where(Usuario.rut == rut_norm)
+                    if registro is not None:
+                        consulta = consulta.where(Usuario.id != registro.id)
+
+                    if consulta.exists():
+                        print(f"El RUT {rut_norm} ya está registrado en otro usuario. Ingresa uno distinto.")
+                        continue
+
+                    datos[nombre] = rut_norm
+
                 else:
                     datos[nombre] = valor
 
@@ -73,10 +105,42 @@ def pedir_datos(modelo, registro=None):
 
                 break
 
-            except ValueError:
-                print("Valor inválido. Intenta nuevamente.")
+            except ValueError as err:  # mensaje por si falla el RUT
+                if modelo is Usuario and nombre == "rut":
+                    print(f"Error de RUT: {err}")
+                else:
+                    print("Valor inválido. Intenta nuevamente.")
 
     return datos
+
+
+# permite elegir buscar un usuario por ID o por RUT
+def _buscar_usuario_interactivo():
+    print("\nBuscar usuario por:")
+    print("1. ID")
+    print("2. RUT")
+    criterio = input("Selecciona una opción: ").strip()
+
+    if criterio == "1":
+        identificador = input("ID del usuario: ").strip()
+        if identificador.isdigit():
+            return buscar_registro(Usuario, int(identificador))
+        print("Ingresa un ID numérico válido.")
+        return None
+
+    if criterio == "2":
+        rut = input("RUT del usuario (ej. 12.345.678-9 o 12345678-9): ").strip()
+        try:
+            usuario = buscar_usuario_por_rut(rut)
+            if not usuario:
+                print("No se encontró ningún usuario con ese RUT.")
+            return usuario
+        except ValueError as err:
+            print(f"Error: {err}")
+            return None
+
+    print("Opción de búsqueda no válida.")
+    return None
 
 
 def menu_crud(modelo, nombre):
@@ -108,7 +172,14 @@ def menu_crud(modelo, nombre):
             datos = pedir_datos(modelo)
 
             if datos:
-                crear_registro(modelo, datos)
+                # usa crear_usuario y captura errores de validación o duplicado
+                try:
+                    if modelo is Usuario:
+                        crear_usuario(datos)
+                    else:
+                        crear_registro(modelo, datos)
+                except (ValueError, IntegrityError) as err:
+                    print(f"No se pudo crear el registro: {err}")
             else:
                 print("No se ingresaron datos.")
 
@@ -116,25 +187,23 @@ def menu_crud(modelo, nombre):
             listar_registros(modelo)
 
         elif opcion == "3":
-            identificador = input("ID del registro: ").strip()
-
-            if identificador.isdigit():
-                registro = buscar_registro(
-                    modelo, int(identificador)
-                )
-
+            # redirige a búsqueda por ID o RUT cuando el modelo es Usuario
+            if modelo is Usuario:
+                registro = _buscar_usuario_interactivo()
                 if registro:
-                    print("\n=== DATOS DEL REGISTRO ===")
-                    tabla = PrettyTable()
-                    tabla.field_names = ["Campo", "Valor"]
-                    for nombre, campo in modelo._meta.fields.items():
-                        valor = getattr(registro, nombre)
-                        if hasattr(valor, "get_id"):
-                             valor = valor.get_id()
-                        tabla.add_row([nombre, valor])
-                    print(tabla)
+                    _mostrar_detalle_registro(modelo, registro)
             else:
-                print("Ingresa un ID numérico válido.")
+                identificador = input("ID del registro: ").strip()
+
+                if identificador.isdigit():
+                    registro = buscar_registro(
+                        modelo, int(identificador)
+                    )
+
+                    if registro:
+                        _mostrar_detalle_registro(modelo, registro)
+                else:
+                    print("Ingresa un ID numérico válido.")
 
         elif opcion == "4":
             identificador = input("ID del registro: ").strip()
@@ -148,11 +217,18 @@ def menu_crud(modelo, nombre):
                     datos = pedir_datos(modelo, registro)
 
                     if datos:
-                        actualizar_registro(
-                            modelo,
-                            int(identificador),
-                            datos,
-                        )
+                        # usa actualizar_usuario y maneja errores de RUT repetido/inválido
+                        try:
+                            if modelo is Usuario:
+                                actualizar_usuario(int(identificador), datos)
+                            else:
+                                actualizar_registro(
+                                    modelo,
+                                    int(identificador),
+                                    datos,
+                                )
+                        except (ValueError, IntegrityError) as err:
+                            print(f"No se pudo actualizar: {err}")
                     else:
                         print("No se modificaron campos.")
             else:

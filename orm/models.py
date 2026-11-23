@@ -1,4 +1,5 @@
 import os
+import re #para puntos, guiones y espacios en el rut
 import hashlib
 from dotenv import load_dotenv
 from peewee import *
@@ -16,11 +17,14 @@ database = MySQLDatabase(
 
 
 class UnknownField(object):
-    def __init__(self, *_, **__): pass
+    def __init__(self, *_, **__):
+        pass
+
 
 class BaseModel(Model):
     class Meta:
         database = database
+
 
 class Proyecto(BaseModel):
     descripcion = CharField(null=True)
@@ -30,12 +34,14 @@ class Proyecto(BaseModel):
     class Meta:
         table_name = 'proyecto'
 
+
 class Tablero(BaseModel):
     nombre = CharField(max_length=100)
     proyecto = ForeignKeyField(column_name='proyecto_id', field='id', model=Proyecto, unique=True)
 
     class Meta:
         table_name = 'tablero'
+
 
 class Lista(BaseModel):
     nombre = CharField(max_length=100)
@@ -44,37 +50,95 @@ class Lista(BaseModel):
 
     class Meta:
         table_name = 'lista'
-###########################################################################
-#integracion de funcion de hasheo
+
+
+
+# funciona para limpiar el RUT y validar su digito verificador
+def normalizar_rut(rut: str) -> str:
+    """Limpia puntos/espacios y devuelve el RUT en formato 'cuerpo-dv' en mayúsculas."""
+    if not isinstance(rut, str):
+        raise ValueError("El RUT debe ser un texto.")
+    limpio = re.sub(r"[^0-9kK]", "", rut).upper()
+    if len(limpio) < 2:
+        raise ValueError("El RUT ingresado es demasiado corto.")
+    cuerpo, dv = limpio[:-1], limpio[-1]
+    if not cuerpo.isdigit():
+        raise ValueError("El cuerpo del RUT solo debe contener dígitos.")
+    return f"{int(cuerpo)}-{dv}"
+
+
+def validar_rut(rut: str) -> bool:
+    """Valida formato y dígito verificador mediante algoritmo módulo 11."""
+    try:
+        rut_norm = normalizar_rut(rut)
+    except ValueError:
+        return False
+
+    cuerpo, dv = rut_norm.split("-")
+    suma = 0
+    multiplicador = 2
+
+    for digito in reversed(cuerpo):
+        suma += int(digito) * multiplicador
+        multiplicador = 2 if multiplicador == 7 else multiplicador + 1
+
+    resto = 11 - (suma % 11)
+    if resto == 11:
+        dv_esperado = "0"
+    elif resto == 10:
+        dv_esperado = "K"
+    else:
+        dv_esperado = str(resto)
+
+    return dv == dv_esperado
+
+
+# Integración de función de hasheo
 def hash_password(password: str) -> str:
     """Hasheo de la contraseña"""
     salt = os.urandom(16)
     pwd_hash = hashlib.pbkdf2_hmac(
-        'sha256', 
-        password.encode('utf-8'), 
-        salt, 
+        'sha256',
+        password.encode('utf-8'),
+        salt,
         100000
     )
     return salt.hex() + '$' + pwd_hash.hex()
-    
+
+
 class Usuario(BaseModel):
+    rut = CharField(max_length=12, unique=True)
     email = CharField(max_length=150)
     nombre = CharField(max_length=100)
     password = CharField(max_length=255)
 
     class Meta:
         table_name = 'usuario'
-    
+
     def save(self, *args, **kwargs):
         """
-        Sobrescribimos el método save de Peewee para asegurar 
-        que la contraseña siempre se guarde hasheada automáticamente.
-        """
+        Valida y normaliza el RUT antes de guardar, y hashea la contraseña """
+        #valida que el RUT tenga dígito verificador correcto antes de guardar
+        if not validar_rut(self.rut):
+            raise ValueError(f"RUT inválido: '{self.rut}'")
+        
+        #normaliza el RUT y verifica que no exista en otro usuario
+        rut_formateado = normalizar_rut(self.rut)
+
+        query = Usuario.select().where(Usuario.rut == rut_formateado)
+        if self.id is not None:
+            query = query.where(Usuario.id != self.id)
+        if query.exists():
+            raise ValueError(f"Ya existe un usuario registrado con el RUT {rut_formateado}.")
+        #guarda el RUT en formato canónico sin puntos ni espacio y con digito verificador en mayuscula 
+        self.rut = rut_formateado 
 
         if self.password and '$' not in self.password:
             self.password = hash_password(self.password)
+
         super().save(*args, **kwargs)
-######################################################################
+
+
 class Tarjeta(BaseModel):
     descripcion = CharField(max_length=500, null=True)
     estado = CharField(constraints=[SQL("DEFAULT 'PENDIENTE'")])
@@ -86,6 +150,7 @@ class Tarjeta(BaseModel):
     class Meta:
         table_name = 'tarjeta'
 
+
 class Comentario(BaseModel):
     contenido = CharField(max_length=500)
     fecha_creacion = DateField(column_name='fechaCreacion')
@@ -94,11 +159,14 @@ class Comentario(BaseModel):
     class Meta:
         table_name = 'comentario'
 
+
 class Etiqueta(BaseModel):
     color = CharField(max_length=50)
     nombre = CharField(max_length=100)
+
     class Meta:
         table_name = 'etiqueta'
+
 
 class ProyectoUsuario(BaseModel):
     proyecto = ForeignKeyField(column_name='proyecto_id', field='id', model=Proyecto)
@@ -111,6 +179,7 @@ class ProyectoUsuario(BaseModel):
         )
         primary_key = CompositeKey('proyecto', 'usuario')
 
+
 class TarjetaEtiqueta(BaseModel):
     etiqueta = ForeignKeyField(column_name='etiqueta_id', field='id', model=Etiqueta)
     tarjeta = ForeignKeyField(column_name='tarjeta_id', field='id', model=Tarjeta)
@@ -121,4 +190,3 @@ class TarjetaEtiqueta(BaseModel):
             (('tarjeta', 'etiqueta'), True),
         )
         primary_key = CompositeKey('tarjeta', 'etiqueta')
-

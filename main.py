@@ -7,7 +7,29 @@ from orm.models import (
 from crud.interfaz import menu_crud
 from crud.proyecto_usuario import menu_participantes
 from crud.tarjeta_etiqueta import menu_asociaciones
+from crud.usuarios import buscar_usuario_por_rut  # importa búsqueda por RUT
 
+
+# consola para buscar usuario por RUT desde el menú principal
+def flujo_buscar_usuario_por_rut():
+    print("\n--- BUSCAR USUARIO POR RUT ---")
+    rut = input("Ingresa el RUT del usuario (ej. 12.345.678-9 o 12345678-9): ").strip()
+
+    try:
+        usuario = buscar_usuario_por_rut(rut)
+    except ValueError as err:
+        print(f"Error: {err}")
+        return
+
+    if not usuario:
+        print("No se encontró ningún usuario con ese RUT.")
+        return
+
+    tabla = PrettyTable()
+    tabla.field_names = ["ID", "RUT", "Nombre", "Email"]
+    tabla.add_row([usuario.id, usuario.rut, usuario.nombre, usuario.email])
+    print("\nUsuario encontrado:")
+    print(tabla)
 
 
 def mostrar_menu():
@@ -24,6 +46,7 @@ def mostrar_menu():
         ("7", "Listar comentarios"),
         ("8", "Gestionar participantes de proyectos"),
         ("9", "Gestionar etiquetas de tarjetas"),
+        ("10", "Buscar usuario por RUT"),  # [CAMBIO RUT]: nueva opción en el menú principal
         ("0", "Salir"),
     ]
 
@@ -45,6 +68,7 @@ def main():
         "7": lambda: menu_crud(Comentario, "Comentarios"),
         "8": menu_participantes,
         "9": menu_asociaciones,
+        "10": flujo_buscar_usuario_por_rut,  # [CAMBIO RUT]: asocia la opción 10 a la búsqueda por RUT
     }
 
     try:
