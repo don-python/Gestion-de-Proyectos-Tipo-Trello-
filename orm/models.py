@@ -1,5 +1,5 @@
 import os
-import re #para puntos, guiones y espacios en el rut
+import re 
 import hashlib
 from dotenv import load_dotenv
 from peewee import *

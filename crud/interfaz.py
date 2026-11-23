@@ -1,8 +1,8 @@
 from datetime import date
-from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError  
+from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError
 from prettytable import PrettyTable
 
-from orm.models import Usuario, normalizar_rut, validar_rut  
+from orm.models import Usuario, normalizar_rut, validar_rut
 from crud.operaciones import (
     crear_registro,
     listar_registros,
@@ -19,6 +19,8 @@ def _mostrar_detalle_registro(modelo, registro):
     tabla = PrettyTable()
     tabla.field_names = ["Campo", "Valor"]
     for campo_nombre in modelo._meta.fields.keys():
+        if modelo is Usuario and campo_nombre == "password":
+            continue
         valor = getattr(registro, campo_nombre)
         if hasattr(valor, "get_id"):
             valor = valor.get_id()

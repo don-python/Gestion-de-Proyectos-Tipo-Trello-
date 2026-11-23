@@ -36,7 +36,11 @@ def listar_registros(modelo):
             return []
 
         tabla = PrettyTable()
-        campos = list(modelo._meta.fields.keys())
+        campos = [
+            campo
+            for campo in modelo._meta.fields.keys()
+            if not (modelo.__name__ == "Usuario" and campo == "password")
+        ]
         tabla.field_names = campos
 
         for registro in registros:
