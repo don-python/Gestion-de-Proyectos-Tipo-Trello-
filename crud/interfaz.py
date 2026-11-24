@@ -2,7 +2,7 @@ from datetime import date
 from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError
 from prettytable import PrettyTable
 
-from orm.models import Usuario, normalizar_rut, validar_rut
+from orm.models import Usuario, normalizar_rut, validar_rut, validar_email
 from crud.operaciones import (
     crear_registro,
     listar_registros,
@@ -68,6 +68,12 @@ def pedir_datos(modelo, registro=None):
 
                 elif isinstance(campo, IntegerField):
                     datos[nombre] = int(valor)
+
+                elif modelo is Usuario and nombre == "email":
+                    if not validar_email(valor):
+                        print("Correo inválido. Usa un formato como nombre@dominio.cl.")
+                        continue
+                    datos[nombre] = valor
 
                 # valida formato/DV y comprueba que el RUT no esté repetido al pedir datos de Usuario
                 elif modelo is Usuario and nombre == "rut":
@@ -248,10 +254,10 @@ def menu_crud(modelo, nombre):
                     print(registro)
 
                     confirmar = input(
-                        "¿Eliminar? Escribe SI para confirmar: "
+                        "¿Eliminar? Escribe si para confirmar: "
                     )
 
-                    if confirmar.strip() == "SI":
+                    if confirmar.strip().upper() == "SI":
                         eliminar_registro(
                             modelo,
                             int(identificador),

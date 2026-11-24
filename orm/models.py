@@ -93,6 +93,19 @@ def validar_rut(rut: str) -> bool:
     return dv == dv_esperado
 
 
+def validar_email(email: str) -> bool:
+    """Valida una estructura básica usuario@dominio.ext."""
+    if not isinstance(email, str):
+        return False
+    patron = (
+        r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+        r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+        r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*"
+        r"\.[A-Za-z]{2,}"
+    )
+    return re.fullmatch(patron, email.strip()) is not None
+
+
 # Integración de función de hasheo
 def hash_password(password: str) -> str:
     """Hasheo de la contraseña"""
