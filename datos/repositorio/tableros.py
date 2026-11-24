@@ -1,5 +1,5 @@
-from orm.models import Tablero
-from crud.operaciones import (
+from datos.modelos.models import Tablero
+from datos.repositorio.operaciones import (
     crear_registro,
     listar_registros,
     buscar_registro,

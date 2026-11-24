@@ -44,43 +44,55 @@ El sistema permite realizar las operaciones básicas de creación, consulta, act
 - Control de errores durante las operaciones con la base de datos.
 - Prevención de asociaciones duplicadas mediante las restricciones de la base de datos.
 
-## 📂 Estructura del proyecto
+## Estructura del proyecto
 
 ```text
-Gestion-de-Proyectos-Tipo-Trello/
-├── bd/
-│   └── trello.sql
-├── crud/
-│   ├── __init__.py
-│   ├── comentarios.py
-│   ├── etiquetas.py
-│   ├── interfaz.py
-│   ├── listas.py
-│   ├── operaciones.py
-│   ├── proyectos.py
-│   ├── proyecto_usuario.py
-│   ├── tableros.py
-│   ├── tarjetas.py
-│   ├── tarjeta_etiqueta.py
+proyecto/
+├── datos/
+│   ├── conexion.py
+│   ├── model_base.py
+│   ├── modelos/
+│   │   └── models.py
+│   ├── repositorio/
+│   │   ├── operaciones.py
+│   │   ├── proyectos.py
+│   │   ├── tableros.py
+│   │   ├── listas.py
+│   │   ├── tarjetas.py
+│   │   ├── usuarios.py
+│   │   ├── etiquetas.py
+│   │   ├── comentarios.py
+│   │   └── relaciones.py
+│   └── sql/
+│       ├── trello.sql
+│       └── 2026.10.20_15.02_crearusuario.sql
+├── negocio/
+│   ├── registros.py
+│   ├── relaciones.py
 │   └── usuarios.py
-├── orm/
-│   ├── __init__.py
-│   └── models.py
+├── presentacion/
+│   ├── interfaz.py
+│   ├── menu.py
+│   ├── proyecto_usuario.py
+│   └── tarjeta_etiqueta.py
+├── auxiliares/
+│   ├── hasheo.py
+│   ├── validaciones.py
+│   └── probar_conexion.py
 ├── uml/
 │   └── trello.drawio
+├── .env
 ├── main.py
-├── probar_conexion.py
-├── README.md
-└── .gitignore
+├── pyproject.toml
+└── README.md
 ```
-
 ##  Base de datos
 
 La base de datos utilizada se denomina `gestion_proyectos` y está implementada en MySQL.
 
 Las tablas principales representan los proyectos, tableros, listas, tarjetas, usuarios, etiquetas y comentarios. También se utilizan tablas intermedias para gestionar las relaciones entre proyectos y usuarios, y entre tarjetas y etiquetas.
 
-El archivo `bd/trello.sql` contiene el script SQL del proyecto.
+El archivo `datos/sql/trello.sql` contiene el script SQL del proyecto.
 
 ##  Instalación y ejecución
 
@@ -111,7 +123,7 @@ En el Símbolo del sistema de Windows, activar el entorno con:
 
 1. Iniciar MySQL desde XAMPP.
 2. Abrir phpMyAdmin.
-3. Crear la base de datos `gestion_proyectos` en phpMyAdmin e importar `bd/trello.sql` para crear sus tablas.
+3. Crear la base de datos `gestion_proyectos` en phpMyAdmin e importar `datos/sql/trello.sql` para crear sus tablas.
 4. Verificar en `.env` los valores de `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER` y `DB_PASSWORD` para que coincidan con la base local.
 
 ### 4. Ejecutar el programa

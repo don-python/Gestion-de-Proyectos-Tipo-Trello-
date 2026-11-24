@@ -3,15 +3,21 @@ import maskpass
 from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError
 from prettytable import PrettyTable
 
-from orm.models import Usuario, normalizar_rut, validar_rut, validar_email, validar_password
-from crud.operaciones import (
+from auxiliares.validaciones import (
+    normalizar_rut,
+    validar_email,
+    validar_password,
+    validar_rut,
+)
+from datos.modelos.models import Usuario
+from negocio.registros import (
     crear_registro,
     listar_registros,
     buscar_registro,
     actualizar_registro,
     eliminar_registro,
 )
-from crud.usuarios import crear_usuario, actualizar_usuario, buscar_usuario_por_rut  # CRUD usuario
+from negocio.usuarios import crear_usuario, actualizar_usuario, buscar_usuario_por_rut  # CRUD usuario
 
 
 # helper para mostrar en tabla los campos de cualquier registro encontrado

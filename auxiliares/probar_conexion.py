@@ -1,5 +1,5 @@
 
-from orm.models import database
+from datos.conexion import database
 
 try:
     database.connect()

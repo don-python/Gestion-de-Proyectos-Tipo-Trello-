@@ -1,5 +1,5 @@
-from orm.models import Lista
-from crud.operaciones import (
+from datos.modelos.models import Lista
+from datos.repositorio.operaciones import (
     crear_registro,
     listar_registros,
     buscar_registro,

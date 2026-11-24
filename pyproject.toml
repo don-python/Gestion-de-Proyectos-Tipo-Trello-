@@ -24,8 +24,7 @@ py-modules = ["main"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["crud*", "orm*"]
-exclude = ["src*"]
+include = ["datos*", "negocio*", "presentacion*", "auxiliares*"]
 
 [build-system]
 requires = ["setuptools>=68"]
