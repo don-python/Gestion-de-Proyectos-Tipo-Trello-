@@ -1,8 +1,8 @@
 import os
 import re 
-import hashlib
 from dotenv import load_dotenv
 from peewee import *
+from orm.hasheo import hash_password, is_bcrypt_hash, is_legacy_pbkdf2_hash
 
 load_dotenv()
 
@@ -117,19 +117,6 @@ def validar_password(password: str) -> bool:
     )
 
 
-# Integración de función de hasheo
-def hash_password(password: str) -> str:
-    """Hasheo de la contraseña"""
-    salt = os.urandom(16)
-    pwd_hash = hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode('utf-8'),
-        salt,
-        100000
-    )
-    return salt.hex() + '$' + pwd_hash.hex()
-
-
 class Usuario(BaseModel):
     rut = CharField(max_length=12, unique=True)
     email = CharField(max_length=150)
@@ -157,13 +144,21 @@ class Usuario(BaseModel):
         #guarda el RUT en formato canónico sin puntos ni espacio y con digito verificador en mayuscula 
         self.rut = rut_formateado 
 
-        if self.password and '$' not in self.password:
-            if not validar_password(self.password):
+        hash_legacy_sin_cambios = False
+        if self.id is not None and is_legacy_pbkdf2_hash(self.password):
+            original = Usuario.get_or_none(Usuario.id == self.id)
+            hash_legacy_sin_cambios = (
+                original is not None and original.password == self.password
+            )
+
+        if self.password and not is_bcrypt_hash(self.password):
+            if not hash_legacy_sin_cambios and not validar_password(self.password):
                 raise ValueError(
                     "La contraseña debe tener al menos 8 caracteres, una mayúscula, "
                     "un número y un símbolo."
                 )
-            self.password = hash_password(self.password)
+            if not hash_legacy_sin_cambios:
+                self.password = hash_password(self.password)
 
         super().save(*args, **kwargs)
 

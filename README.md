@@ -39,7 +39,8 @@ El sistema permite realizar las operaciones básicas de creación, consulta, act
 
 - Validación de identificadores y tipos de datos ingresados.
 - Validación de los estados permitidos para las tarjetas.
-- Contraseñas de al menos 8 caracteres, con una mayúscula, un número y un símbolo; se almacenan hasheadas.
+- Contraseñas de al menos 8 caracteres, con una mayúscula, un número y un símbolo; se almacenan con BCrypt.
+- Los hashes antiguos se conservan para no invalidar registros; pasan a BCrypt cuando se establece una nueva contraseña.
 - Control de errores durante las operaciones con la base de datos.
 - Prevención de asociaciones duplicadas mediante las restricciones de la base de datos.
 
@@ -91,25 +92,40 @@ El archivo `bd/trello.sql` contiene el script SQL del proyecto.
 
 ### 2. Instalar dependencias
 
-Desde una terminal, ejecutar:
+Desde la carpeta raíz del proyecto, crear un entorno virtual e instalar el proyecto. Esto instala también las dependencias declaradas en `pyproject.toml` (`bcrypt`, `maskpass`, Peewee, MySQL y `python-dotenv`):
 
-```bash
-pip install peewee pymysql prettytable maskpass
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -e .
+```
+
+En el Símbolo del sistema de Windows, activar el entorno con:
+
+```bat
+.venv\Scripts\activate.bat
 ```
 
 ### 3. Configurar la base de datos
 
 1. Iniciar MySQL desde XAMPP.
 2. Abrir phpMyAdmin.
-3. Crear o importar la base de datos `gestion_proyectos` utilizando el archivo `bd/trello.sql`.
-4. Verificar que las credenciales de conexión configuradas en `orm/models.py` coincidan con el entorno local.
+3. Crear la base de datos `gestion_proyectos` en phpMyAdmin e importar `bd/trello.sql` para crear sus tablas.
+4. Verificar en `.env` los valores de `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER` y `DB_PASSWORD` para que coincidan con la base local.
 
 ### 4. Ejecutar el programa
 
-Desde la carpeta raíz del proyecto, ejecutar:
+Desde la carpeta raíz del proyecto, con el entorno virtual activo, ejecutar:
 
 ```bash
 python main.py
+```
+
+También se puede iniciar mediante el comando instalado:
+
+```powershell
+gestion-trello
 ```
 
 El programa mostrará un menú principal desde el cual se puede acceder a las opciones de gestión de registros y asociaciones.
