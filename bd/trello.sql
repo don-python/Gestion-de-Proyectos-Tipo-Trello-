@@ -23,7 +23,7 @@ CREATE TABLE Lista (
 CREATE TABLE Usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    rut varchar(12) NOT NULL UNIQUE,
+    rut VARCHAR(12) NOT NULL UNIQUE,
     email VARCHAR(150) NOT NULL,
     password VARCHAR(255) NOT NULL
 );

@@ -1,5 +1,5 @@
 from peewee import IntegrityError  
-from orm.models import Usuario, normalizar_rut, validar_rut  
+from orm.models import Usuario, normalizar_rut, validar_rut, validar_email, validar_password
 from crud.operaciones import (
     crear_registro,
     listar_registros,
@@ -11,6 +11,10 @@ from crud.operaciones import (
 
 def crear_usuario(datos: dict):
     """Crea un usuario validando que el RUT sea válido y no esté repetido."""
+    if not validar_email(datos.get("email", "")):
+        raise ValueError("El correo debe tener un formato válido, por ejemplo nombre@dominio.cl.")
+    if not validar_password(datos.get("password", "")):
+        raise ValueError("La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo.")
     # valida el RUT ingresado antes de crear el registro
     rut_ingresado = datos.get("rut", "")
     if not validar_rut(rut_ingresado):
@@ -49,6 +53,11 @@ def buscar_usuario_por_rut(rut: str):
 
 def actualizar_usuario(identificador, datos: dict):
     datos_limpios = dict(datos)
+
+    if "email" in datos_limpios and not validar_email(datos_limpios["email"]):
+        raise ValueError("El correo debe tener un formato válido, por ejemplo nombre@dominio.cl.")
+    if "password" in datos_limpios and not validar_password(datos_limpios["password"]):
+        raise ValueError("La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo.")
 
     # valida y evita duplicados al actualizar el RUT de un usuario
     if "rut" in datos_limpios and datos_limpios["rut"] is not None:

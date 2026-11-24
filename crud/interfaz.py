@@ -1,8 +1,9 @@
 from datetime import date
+import maskpass
 from peewee import ForeignKeyField, DateField, IntegerField, IntegrityError
 from prettytable import PrettyTable
 
-from orm.models import Usuario, normalizar_rut, validar_rut
+from orm.models import Usuario, normalizar_rut, validar_rut, validar_email, validar_password
 from crud.operaciones import (
     crear_registro,
     listar_registros,
@@ -37,6 +38,9 @@ def pedir_datos(modelo, registro=None):
 
         actual = getattr(registro, nombre) if registro else None
 
+        if modelo is Usuario and nombre == "password":
+            actual = None
+
         if hasattr(actual, "get_id"):
             actual = actual.get_id()
 
@@ -44,11 +48,15 @@ def pedir_datos(modelo, registro=None):
         obligatorio = not campo.null and campo.default is None
 
         while True:
-            valor = input(
+            prompt = (
                 f"{etiqueta}"
                 + (f" [{actual}]" if actual is not None else "")
                 + ": "
-            ).strip()
+            )
+            if modelo is Usuario and nombre == "password":
+                valor = maskpass.askpass(prompt=prompt, mask="*").strip()
+            else:
+                valor = input(prompt).strip()
 
             if not valor and registro is not None:
                 break
@@ -68,6 +76,21 @@ def pedir_datos(modelo, registro=None):
 
                 elif isinstance(campo, IntegerField):
                     datos[nombre] = int(valor)
+
+                elif modelo is Usuario and nombre == "password":
+                    if not validar_password(valor):
+                        print(
+                            "Contraseña débil. Debe tener al menos 8 caracteres, "
+                            "una mayúscula, un número y un símbolo."
+                        )
+                        continue
+                    datos[nombre] = valor
+
+                elif modelo is Usuario and nombre == "email":
+                    if not validar_email(valor):
+                        print("Correo inválido. Usa un formato como nombre@dominio.cl.")
+                        continue
+                    datos[nombre] = valor
 
                 # valida formato/DV y comprueba que el RUT no esté repetido al pedir datos de Usuario
                 elif modelo is Usuario and nombre == "rut":
@@ -248,10 +271,10 @@ def menu_crud(modelo, nombre):
                     print(registro)
 
                     confirmar = input(
-                        "¿Eliminar? Escribe SI para confirmar: "
+                        "¿Eliminar? Escribe si para confirmar: "
                     )
 
-                    if confirmar.strip() == "SI":
+                    if confirmar.strip().upper() == "SI":
                         eliminar_registro(
                             modelo,
                             int(identificador),

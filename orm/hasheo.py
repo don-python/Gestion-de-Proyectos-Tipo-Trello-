@@ -1,34 +1,36 @@
-import hashlib 
-import os
+import base64
+import hashlib
+import re
+
+import bcrypt
+
+
+def _bcrypt_input(password: str) -> bytes:
+    """Pre-hash to support passwords longer than BCrypt's 72-byte limit."""
+    digest = hashlib.sha256(password.encode("utf-8")).digest()
+    return base64.b64encode(digest)
+
 
 def hash_password(password: str) -> str:
-    """hashear una contraseña"""
+    """Devuelve un hash BCrypt con una sal aleatoria."""
+    return bcrypt.hashpw(_bcrypt_input(password), bcrypt.gensalt()).decode("utf-8")
 
-    salt = os.urandom(16)
-    #aplicar la funcion hash
-    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-    #retornar valores unidos por $
-    return salt.hex() + '$' + pwd_hash.hex()
 
 def verify_password(plain_password: str, stored_hash: str) -> bool:
-    """
-    Verifica si una contraseña escrita coincide con el hash guardado en la BD.
-    """
+    """Compara una contraseña en texto con un hash BCrypt almacenado."""
     try:
-        # Separa la sal y el hash guardados
-        salt_hex, pwd_hex = stored_hash.split('$')
-        salt = bytes.fromhex(salt_hex)
-        stored_pwd_bytes = bytes.fromhex(pwd_hex)
-        
-        # Vuelve a hashear la contraseña ingresada con la misma sal
-        pwd_hash = hashlib.pbkdf2_hmac(
-            'sha256', 
-            plain_password.encode('utf-8'), 
-            salt, 
-            100000
+        return bcrypt.checkpw(
+            _bcrypt_input(plain_password),
+            stored_hash.encode("utf-8"),
         )
-        
-        # Compara de forma segura ambos hashes
-        return pwd_hash == stored_pwd_bytes
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         return False
+
+
+def is_bcrypt_hash(stored_hash: str) -> bool:
+    return isinstance(stored_hash, str) and stored_hash.startswith(("$2a$", "$2b$", "$2y$"))
+
+
+def is_legacy_pbkdf2_hash(stored_hash: str) -> bool:
+    """Reconoce el formato anterior para conservar cuentas hasta su cambio de clave."""
+    return isinstance(stored_hash, str) and re.fullmatch(r"[0-9a-fA-F]{32}\$[0-9a-fA-F]{64}", stored_hash) is not None

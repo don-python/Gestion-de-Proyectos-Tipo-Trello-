@@ -12,11 +12,21 @@ dependencies = [
     "prettytable>=3.18.0",
     "pymysql>=1.2.4",
     "python-dotenv>=1.2.4",
+    "maskpass>=0.3.7,<0.4",
+    "bcrypt>=4.0.0",
 ]
 
 [project.scripts]
-gestion-trello = "gestion_trello:main"
+gestion-trello = "main:main"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["crud*", "orm*"]
+exclude = ["src*"]
 
 [build-system]
-requires = ["uv_build>=0.12.9,<0.13.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
