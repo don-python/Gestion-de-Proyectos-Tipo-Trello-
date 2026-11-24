@@ -39,6 +39,7 @@ El sistema permite realizar las operaciones básicas de creación, consulta, act
 
 - Validación de identificadores y tipos de datos ingresados.
 - Validación de los estados permitidos para las tarjetas.
+- Contraseñas de al menos 8 caracteres, con una mayúscula, un número y un símbolo; se almacenan hasheadas.
 - Control de errores durante las operaciones con la base de datos.
 - Prevención de asociaciones duplicadas mediante las restricciones de la base de datos.
 
@@ -93,7 +94,7 @@ El archivo `bd/trello.sql` contiene el script SQL del proyecto.
 Desde una terminal, ejecutar:
 
 ```bash
-pip install peewee pymysql prettytable
+pip install peewee pymysql prettytable maskpass
 ```
 
 ### 3. Configurar la base de datos

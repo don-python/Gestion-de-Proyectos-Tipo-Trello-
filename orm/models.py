@@ -106,6 +106,17 @@ def validar_email(email: str) -> bool:
     return re.fullmatch(patron, email.strip()) is not None
 
 
+def validar_password(password: str) -> bool:
+    """Exige 8 caracteres, mayúscula, número y símbolo no espaciador."""
+    return (
+        isinstance(password, str)
+        and len(password) >= 8
+        and any(caracter.isupper() for caracter in password)
+        and any(caracter.isdigit() for caracter in password)
+        and any(not caracter.isalnum() and not caracter.isspace() for caracter in password)
+    )
+
+
 # Integración de función de hasheo
 def hash_password(password: str) -> str:
     """Hasheo de la contraseña"""
@@ -147,6 +158,11 @@ class Usuario(BaseModel):
         self.rut = rut_formateado 
 
         if self.password and '$' not in self.password:
+            if not validar_password(self.password):
+                raise ValueError(
+                    "La contraseña debe tener al menos 8 caracteres, una mayúscula, "
+                    "un número y un símbolo."
+                )
             self.password = hash_password(self.password)
 
         super().save(*args, **kwargs)

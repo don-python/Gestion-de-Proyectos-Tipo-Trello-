@@ -12,6 +12,7 @@ dependencies = [
     "prettytable>=3.18.0",
     "pymysql>=1.2.4",
     "python-dotenv>=1.2.4",
+    "maskpass>=0.3.7,<0.4",
 ]
 
 [project.scripts]
