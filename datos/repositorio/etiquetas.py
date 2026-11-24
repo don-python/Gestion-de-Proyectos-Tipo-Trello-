@@ -1,5 +1,5 @@
-from orm.models import Etiqueta
-from crud.operaciones import (
+from datos.modelos.models import Etiqueta
+from datos.repositorio.operaciones import (
     crear_registro,
     listar_registros,
     buscar_registro,
